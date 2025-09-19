@@ -1,0 +1,248 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
+ */
+package Vistas;
+
+import Entity.Entrada;
+import Entity.Persistencia;
+import Entity.Presentacion;
+import Entity.Persona;
+import Entity.Usuario;
+import Entity.EnumeracionStatus;
+import java.util.List;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import jpaController.EntradaJpaController;
+
+
+/**
+ *
+ * @author juanm
+ */
+public class SeleccionBoletos extends javax.swing.JPanel {
+   
+    private Persistencia persis;
+    private EntradaJpaController entradaCtrl;
+    private DefaultTableModel modelo;
+    private EntityManagerFactory emf;
+
+    private Entrada boletoSeleccionado;      
+    private double precioSeleccionado = 0.0;  
+     public SeleccionBoletos() {
+        initComponents();
+        persis = new Persistencia();
+        emf = persis.getEmf();
+        entradaCtrl = new EntradaJpaController(emf);
+
+        cargarBoletosDisponibles();
+        jButton2.setEnabled(false); // Pagar deshabilitado al inicio
+    }
+
+    // -------- Cargar boletos disponibles --------
+    private void cargarBoletosDisponibles() {
+        modelo = new DefaultTableModel(
+                new Object[]{"ID", "Presentación", "Escenario", "Precio", "Asiento"}, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        try {
+            List<Entrada> entradas = entradaCtrl.findEntradaEntities()
+                    .stream()
+                    .filter(e -> e.getIdStatus() != null && e.getIdStatus().getIdStatus() == 1)
+                    .toList();
+
+            for (Entrada e : entradas) {
+                Presentacion p = e.getIdPresentacion();
+                modelo.addRow(new Object[]{
+                    e.getIdEntrada(),
+                    p != null ? p.getTitulo() : "—",
+                    p != null && p.getIdEscenario() != null ? p.getIdEscenario().getNombre() : "—",
+                    p != null ? p.getCostoBase() : "—",
+                    e.getAsiento()
+                });
+            }
+
+            jtabledatos.setModel(modelo);
+
+            if (jtabledatos.getColumnCount() > 0) {
+                jtabledatos.getColumnModel().getColumn(0).setMinWidth(0);
+                jtabledatos.getColumnModel().getColumn(0).setMaxWidth(0);
+                jtabledatos.getColumnModel().getColumn(0).setPreferredWidth(0);
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al cargar boletos: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // -------- Seleccionar boleto (Aceptar) --------
+    private void aceptarBoleto() {
+        int fila = jtabledatos.getSelectedRow();
+        if (fila == -1) {
+            JOptionPane.showMessageDialog(this, "Seleccione un boleto primero.");
+            return;
+        }
+
+        try {
+            int idEntrada = Integer.parseInt(modelo.getValueAt(fila, 0).toString());
+            boletoSeleccionado = entradaCtrl.findEntrada(idEntrada);
+
+            if (boletoSeleccionado == null) {
+                JOptionPane.showMessageDialog(this, "Entrada no encontrada.");
+                return;
+            }
+
+            // Guardamos el precio del boleto
+            precioSeleccionado = boletoSeleccionado.getIdPresentacion().getCostoBase();
+
+            JOptionPane.showMessageDialog(this, "Boleto seleccionado. Precio: $" + precioSeleccionado);
+            jButton2.setEnabled(true); // habilitar pagar
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al seleccionar boleto: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // -------- Pagar boleto --------
+   private void pagarBoleto() {
+    if (boletoSeleccionado == null) {
+        JOptionPane.showMessageDialog(this, "No hay boleto seleccionado.");
+        return;
+    }
+
+    // Creamos el panel de pago
+    CompraBoletos panelPago = new CompraBoletos(boletoSeleccionado, precioSeleccionado);
+
+    // Lo ponemos dentro de un JFrame
+    JFrame frame = new JFrame("Pago de Boleto");
+    frame.setContentPane(panelPago);
+    frame.pack(); // ajusta el tamaño al contenido
+    frame.setLocationRelativeTo(null); // centra la ventana
+    frame.setVisible(true);
+
+    // Opcional: después de abrir la ventana, limpiamos selección
+    jButton2.setEnabled(false);
+    boletoSeleccionado = null;
+    precioSeleccionado = 0.0;
+
+    }
+
+
+    
+        
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jtabledatos = new javax.swing.JTable();
+        jLabel1 = new javax.swing.JLabel();
+        jButton1 = new javax.swing.JButton();
+        jButton2 = new javax.swing.JButton();
+        jLabel2 = new javax.swing.JLabel();
+
+        jtabledatos.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        jScrollPane1.setViewportView(jtabledatos);
+
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        jLabel1.setText("Seleccion De Boletos");
+
+        jButton1.setText("Aceptar");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        jButton2.setText("Pagar");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
+
+        jLabel2.setText("Seleccione el boleto a Comprar y pulse aceptar:");
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 506, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButton2)
+                    .addComponent(jButton1))
+                .addGap(209, 209, 209))
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 281, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(164, 164, 164)
+                        .addComponent(jLabel1)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(27, 27, 27)
+                .addComponent(jLabel1)
+                .addGap(33, 33, 33)
+                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(jButton1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton2)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        aceptarBoleto();
+
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        pagarBoleto();
+    }//GEN-LAST:event_jButton2ActionPerformed
+
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTable jtabledatos;
+    // End of variables declaration//GEN-END:variables
+}
