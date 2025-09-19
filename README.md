@@ -6,6 +6,5 @@ Para el correcto Funcionamiento se requiere lo siguiente:
 - jdk 21
 - NetBeans version 19
 - Agregar todos los .jar de la carpeta librerias
+
 El jdk y Neatbeans version 19 viene adjunto a una carpeta nombrada Requisitos
-
-
